@@ -1,28 +1,18 @@
 window.addEventListener('DOMContentLoaded', () => {
 
 	const nameInput = document.querySelector('#name').focus();
-
-	// Other job title input
 	const titleOtherInput = document.querySelector('#user-title-other');
-
-	const showTitleOtherField = () => { titleOtherInput.style.display = 'block' };
-	const hideTitleOtherField = () => { titleOtherInput.style.display = 'none' };
-
-	hideTitleOtherField();
-
 	const titleSelect = document.querySelector('#title');
-	titleSelect.addEventListener('change', (e) => {
-		if(e.target.selectedOptions[0].value == 'other'){
-			showTitleOtherField();
-		}
-		else{
-			hideTitleOtherField();
-		}
-	});
-
+	const activitiesContainer = document.querySelector('.activities');
+	const activities = document.querySelectorAll('.activities input[type="checkbox"]');
 	const colorSelect = document.querySelector('#color');
 	const colorSelectOptions = colorSelect.querySelectorAll('#color option');
 	const designSelect = document.querySelector('#design');
+
+	let runningTotalAmount = 0.00;
+
+	const showTitleOtherField = () => { titleOtherInput.style.display = 'block' };
+	const hideTitleOtherField = () => { titleOtherInput.style.display = 'none' };
 
 	/**
 	 * Remove option elements from select element and replace with default message
@@ -64,9 +54,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		return filteredOptions;
 	};
 
-	emptySelectOptions(colorSelect, 'Please select a T-shirt theme');
-
-	
 	/**
 	 * Populates a select element with provided options
 	 * @param {HTMLSelectElement} Select element to populate
@@ -80,6 +67,80 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
+	/**
+	 * Determines whether any other activities conflict with the supplied activity
+	 * and enables or disables the matching checkboxes
+	 * @param {HTMLInputElement} Checkbox activity to test for conflicting events
+	 * @param {boolean} Specify whether to disable the checkbox
+	 */
+	const conflictingActivities = (chosenEventCheckbox, disable) => {
+
+		// Main conference doesn't conflict with any activity
+		if(chosenEventCheckbox.name == 'all'){
+			return true;
+		}
+
+		const dateAndTimeStr = chosenEventCheckbox.dataset.dayAndTime;
+		const dateAndTimeResults = dateAndTimeStr.match(/^([\w]+).([\w-]+)/);
+		const day = dateAndTimeResults[1];
+		const time = dateAndTimeResults[2];
+
+		let conflict = false;
+		let conflicts = [];
+
+		// for all activities check if it conflicts with chosen activity
+		activities.forEach( (activity) => {
+			if(activity !== chosenEventCheckbox && activity.name !== 'all'){
+				const dateAndTimeStr = activity.dataset.dayAndTime;
+				const sameDay = dateAndTimeStr.includes(day);
+				const sameTime = dateAndTimeStr.includes(time);
+				
+				if(sameDay && sameTime || activity.name == 'all'){
+					activity.disabled = disable;
+				}
+			}
+		});
+	};
+
+	/**
+	 * Add a running total of costs below the activities list
+	 */
+	const addRunningTotal = () => {
+		const runningTotal = document.createElement('p');
+		const runningTotalAmountSpan = document.createElement('span');
+		runningTotalAmountSpan.id = 'runningTotal';
+		const runningTotalTitle = document.createTextNode('Total: $');
+		runningTotalAmountSpan.innerText = "0";
+		runningTotal.appendChild(runningTotalTitle);
+		runningTotal.appendChild(runningTotalAmountSpan);
+		activitiesContainer.appendChild(runningTotal);
+	};
+
+	/**
+	 * Update the running total by the amount specified. Negative numbers
+	 * will reduce the total.
+	 *
+	 * @param {integer} and amount to increase/descrease the total by
+	 */
+	const updateRunningTotal = (value) => {
+		const runningTotalSpan = document.querySelector('#runningTotal');
+		let runningTotal = parseInt(runningTotalSpan.innerText);
+		runningTotalSpan.innerText = (runningTotal + value);
+	};
+
+	hideTitleOtherField();
+
+	titleSelect.addEventListener('change', (e) => {
+		if(e.target.selectedOptions[0].value == 'other'){
+			showTitleOtherField();
+		}
+		else{
+			hideTitleOtherField();
+		}
+	});
+
+	emptySelectOptions(colorSelect, 'Please select a T-shirt theme');
+
 	designSelect.addEventListener('change', (e) => {
 		if (e.target.selectedOptions[0].value == ''){
 			emptySelectOptions(colorSelect, 'Please select a T-shirt theme');
@@ -92,52 +153,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-
-	const activities = document.querySelectorAll('.activities input[type="checkbox"]');
-
 	activities.forEach( (activity) => {
 		activity.addEventListener('click', (event) => {
 			const checkbox = event.currentTarget;
+			const cost = checkbox.dataset.cost;
 
 			if(checkbox.checked){
-				conflictingEvents(checkbox, true);
+				conflictingActivities(checkbox, true);
+				updateRunningTotal(parseInt(cost));
 			}
 			else{
-
-				conflictingEvents(checkbox, false);
+				conflictingActivities(checkbox, false);
+				updateRunningTotal(parseInt(cost)*-1);
 			}
 		});
-
-		event.preventDefault();
 	});
 
-	/**
-	 * Determines whether any other events conflict with the supplied event
-	 * @param {HTMLInputElement} Checkbox activity to test for conflicting events
-	 * @param {boolean} Specify whether to disable the checkbox
-	 */
-	const conflictingEvents = (chosenEventCheckbox, disable) => {
-		const dateAndTimeStr = chosenEventCheckbox.dataset.dayAndTime;
-		const dateAndTimeResults = dateAndTimeStr.match(/^([\w]+).([\w-]+)/);
-		const day = dateAndTimeResults[1];
-		const time = dateAndTimeResults[2];
-
-		let conflict = false;
-		let conflicts = [];
-
-		activities.forEach( (activity) => {
-			if(activity !== chosenEventCheckbox && activity.name !== 'all'){
-				const dateAndTimeStr = activity.dataset.dayAndTime;
-				const sameDay = dateAndTimeStr.includes(day);
-				const sameTime = dateAndTimeStr.includes(time);
-				
-				if(sameDay && sameTime && disable){
-					activity.disabled = true;
-				}
-				else if(sameDay && sameTime && !disable){
-					activity.disabled = false;
-				}
-			}
-		});
-	};
+	addRunningTotal();
 });
