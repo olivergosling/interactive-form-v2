@@ -53,9 +53,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		const filteredOptions = [];
 		colorSelectOptions.forEach( (el) => {
 			if(el.innerText.includes(search)){
+				let newOption = el.cloneNode(true);
 				// ensure any selected state is removed
-				el.selected = '';
-				filteredOptions.push(el);
+				newOption.selected = '';
+				// remove the search term in brackets
+				newOption.innerText = el.innerText.replace(`(${search})`, "");
+				filteredOptions.push(newOption);
 			}
 		});
 		return filteredOptions;
@@ -78,8 +81,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	designSelect.addEventListener('change', (e) => {
-		console.log(e.target.selectedOptions[0].value);
-
 		if (e.target.selectedOptions[0].value == ''){
 			emptySelectOptions(colorSelect, 'Please select a T-shirt theme');
 		}
@@ -90,4 +91,53 @@ window.addEventListener('DOMContentLoaded', () => {
 			populateSelect(colorSelect, filteredSelectOptions('I ♥ JS shirt only', colorSelectOptions));
 		}
 	});
+
+
+	const activities = document.querySelectorAll('.activities input[type="checkbox"]');
+
+	activities.forEach( (activity) => {
+		activity.addEventListener('click', (event) => {
+			const checkbox = event.currentTarget;
+
+			if(checkbox.checked){
+				conflictingEvents(checkbox, true);
+			}
+			else{
+
+				conflictingEvents(checkbox, false);
+			}
+		});
+
+		event.preventDefault();
+	});
+
+	/**
+	 * Determines whether any other events conflict with the supplied event
+	 * @param {HTMLInputElement} Checkbox activity to test for conflicting events
+	 * @param {boolean} Specify whether to disable the checkbox
+	 */
+	const conflictingEvents = (chosenEventCheckbox, disable) => {
+		const dateAndTimeStr = chosenEventCheckbox.dataset.dayAndTime;
+		const dateAndTimeResults = dateAndTimeStr.match(/^([\w]+).([\w-]+)/);
+		const day = dateAndTimeResults[1];
+		const time = dateAndTimeResults[2];
+
+		let conflict = false;
+		let conflicts = [];
+
+		activities.forEach( (activity) => {
+			if(activity !== chosenEventCheckbox && activity.name !== 'all'){
+				const dateAndTimeStr = activity.dataset.dayAndTime;
+				const sameDay = dateAndTimeStr.includes(day);
+				const sameTime = dateAndTimeStr.includes(time);
+				
+				if(sameDay && sameTime && disable){
+					activity.disabled = true;
+				}
+				else if(sameDay && sameTime && !disable){
+					activity.disabled = false;
+				}
+			}
+		});
+	};
 });
