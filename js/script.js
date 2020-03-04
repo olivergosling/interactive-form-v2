@@ -8,11 +8,26 @@ window.addEventListener('DOMContentLoaded', () => {
 	const colorSelect = document.querySelector('#color');
 	const colorSelectOptions = colorSelect.querySelectorAll('#color option');
 	const designSelect = document.querySelector('#design');
+	const paymentSelect = document.querySelector('#payment');
+
+	const creditCardOption = document.querySelector('#credit-card');
+	const paypalOption = document.querySelector('#paypal');
+	const bitCoinOption = document.querySelector('#bitcoin');
+
 
 	let runningTotalAmount = 0.00;
 
 	const showTitleOtherField = () => { titleOtherInput.style.display = 'block' };
 	const hideTitleOtherField = () => { titleOtherInput.style.display = 'none' };
+
+	const showCreditCardOption = () => { creditCardOption.style.display = 'block' };
+	const hideCreditCardOption = () => { creditCardOption.style.display = 'none' };
+
+	const showPayPalOption = () => { paypalOption.style.display = 'block' };
+	const hidePayPalOption = () => { paypalOption.style.display = 'none' };
+
+	const showBitCoinOption = () => { bitCoinOption.style.display = 'block' };
+	const hideBitCoinOption = () => { bitCoinOption.style.display = 'none' };
 
 	/**
 	 * Remove option elements from select element and replace with default message
@@ -170,4 +185,36 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	addRunningTotal();
+
+	paymentSelect.querySelector('option[value="credit card"]').selected = 'selected';
+	hidePayPalOption()
+	hideBitCoinOption();
+
+	paymentSelect.addEventListener('change', (e) => {
+		switch (e.target.selectedOptions[0].value) {
+
+			case 'select method':
+				alert('Please select a payment option');
+				e.target.selectedIndex = 1;
+
+			case 'credit card':
+				hidePayPalOption()
+				hideBitCoinOption();
+				showCreditCardOption();
+			break;
+
+			case 'paypal':
+				hideCreditCardOption()
+				hideBitCoinOption();
+				showPayPalOption();
+			break;
+
+			case 'bitcoin':
+				hidePayPalOption()
+				hideCreditCardOption();
+				showBitCoinOption();
+			break;
+
+		}
+	});
 });
