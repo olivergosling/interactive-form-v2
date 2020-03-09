@@ -23,7 +23,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const creditCardInput = document.querySelector('#cc-num');
 	const zipInput = document.querySelector('#zip');
 	const cvvInput = document.querySelector('#cvv');
-	
+
 	let runningTotalAmount = 0.00;
 
 	const showColorSelect = () => { colorSelectContainer.style.display = 'block' };
@@ -54,6 +54,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const isValidCardNumber = (number) => {
 		return /^[\d]{13,16}$/g.test(number);
+	}
+
+	const isValidCardNumber2 = (number) => {
+		return !/^$/g.test(number);
 	}
 
 	const isValidZIP = (zip) => {
@@ -381,7 +385,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if(paymentSelect.options[paymentSelect.selectedIndex].value == 'credit card'){
-			if(!isValidCardNumber(creditCardInput.value)){
+			if(!isValidCardNumber2(creditCardInput.value)){
+				const errMsg = 'Please enter a card number';
+				errors.push(errMsg)
+				showOrHideError(creditCardInput, true, errMsg);
+			}
+			else if(!isValidCardNumber(creditCardInput.value)){
 				const errMsg = 'Please enter a valid credit card number between 13 and 16 digits';
 				errors.push(errMsg)
 				showOrHideError(creditCardInput, true, errMsg);
