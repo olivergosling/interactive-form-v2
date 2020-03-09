@@ -121,10 +121,24 @@ button:hover {
 	background: #6F9DDC;
 }
 
+input.error,
+select.erorr{
+	border-color: red;
+}
+
+p.error{
+	margin-top: 0;
+	color: red;
+}
+
 input, 
 select, 
 option {
 	font-family: 'roboto', sans-serif;
+}
+
+.error-list{
+	color: red;
 }
 
 /* ================================= 

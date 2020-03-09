@@ -1,21 +1,33 @@
 window.addEventListener('DOMContentLoaded', () => {
 
-	const nameInput = document.querySelector('#name').focus();
+	const confForm = document.querySelector('form');
+
+	const nameInput = document.querySelector('#name');
+	const emailInput = document.querySelector('#mail');
 	const titleOtherInput = document.querySelector('#user-title-other');
 	const titleSelect = document.querySelector('#title');
-	const activitiesContainer = document.querySelector('.activities');
-	const activities = document.querySelectorAll('.activities input[type="checkbox"]');
+
+	const colorSelectContainer = document.querySelector('#colors-js-puns');
 	const colorSelect = document.querySelector('#color');
 	const colorSelectOptions = colorSelect.querySelectorAll('#color option');
 	const designSelect = document.querySelector('#design');
-	const paymentSelect = document.querySelector('#payment');
 
+	const activitiesContainer = document.querySelector('.activities');
+	const activities = document.querySelectorAll('.activities input[type="checkbox"]');
+
+	const paymentSelect = document.querySelector('#payment');
 	const creditCardOption = document.querySelector('#credit-card');
 	const paypalOption = document.querySelector('#paypal');
 	const bitCoinOption = document.querySelector('#bitcoin');
 
-
+	const creditCardInput = document.querySelector('#cc-num');
+	const zipInput = document.querySelector('#zip');
+	const cvvInput = document.querySelector('#cvv');
+	
 	let runningTotalAmount = 0.00;
+
+	const showColorSelect = () => { colorSelectContainer.style.display = 'block' };
+	const hideColorSelect = () => { colorSelectContainer.style.display = 'none' };
 
 	const showTitleOtherField = () => { titleOtherInput.style.display = 'block' };
 	const hideTitleOtherField = () => { titleOtherInput.style.display = 'none' };
@@ -28,6 +40,56 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showBitCoinOption = () => { bitCoinOption.style.display = 'block' };
 	const hideBitCoinOption = () => { bitCoinOption.style.display = 'none' };
+
+	/**
+	 * Validator functions
+	 */ 
+	const isValidName = (name) => {
+		return /^[\w ]+$/.test(name)
+	}
+
+	const isValidEmail = (email) => {
+		return /^[^@]+@[^@.]+\.[a-z]+$/i.test(email);
+	}
+
+	const isValidCardNumber = (number) => {
+		return /^[\d]{13,16}$/g.test(number);
+	}
+
+	const isValidZIP = (zip) => {
+		return /^[\d]{5}$/.test(zip);
+	}
+
+	const isValidCVV = (cvv) => {
+		return /^[\d]{3}$/.test(cvv);
+	}
+
+	const hasSelectedActivity = () => {
+		const selectedActivities = document.querySelectorAll('.activities input[type="checkbox"]:checked');
+		return selectedActivities.length > 0;
+	}
+
+	/**
+	 * Add or hide error message for given input element
+	 * @param {HTMLInput} input element
+	 * @param {boolean} specify whether to show or hide error
+	 * @param {string} error message to display
+	 */
+	const showOrHideError = (inputEl, showError, errorMessage) => {
+		let error = inputEl.nextElementSibling;
+		inputEl.classList.remove('error');
+		if(error && error.classList.contains('error')){
+			inputEl.parentElement.removeChild(error);
+		}
+
+		if(showError){
+			error = document.createElement('p');
+			error.classList.add('error');
+			error.innerHTML = errorMessage;
+			inputEl.classList.add('error');
+			inputEl.parentElement.insertBefore(error, inputEl.nextSibling);
+		}
+	}
 
 	/**
 	 * Remove option elements from select element and replace with default message
@@ -143,8 +205,58 @@ window.addEventListener('DOMContentLoaded', () => {
 		runningTotalSpan.innerText = (runningTotal + value);
 	};
 
+	/**
+	 * Display given array of errors at top of form
+	 * @param {array} an array of error strings
+	 */
+	 const showErrors = (errors) => {
+
+	 	let errorContainer = document.querySelector('.error-list');
+	 	if(!errorContainer){
+	 		errorContainer = document.createElement('div');
+	 		errorContainer.classList.add('error-list');
+	 	}
+
+		while (errorContainer.firstChild) {
+			errorContainer.removeChild(errorContainer.lastChild);
+		}
+
+	 	errors.forEach( (err) => {
+	 		let errLi = document.createElement('li');
+	 		errLi.innerText = err;
+	 		errorContainer.appendChild(errLi);
+	 	});
+
+	 	confForm.insertBefore(errorContainer, confForm.firstChild);
+	}
+
+	/**
+	 * Remove all errors
+	 */
+	const clearErrors = () => {
+		const errorList = document.querySelector('.error-list');
+		if(errorList){
+			errorList.parentNode.removeChild(errorList);
+		}
+
+		const errorMessages = document.querySelectorAll('p.error');
+		errorMessages.forEach( (el) => {
+			el.parentNode.removeChild(el);
+		});
+
+		const errorInputs = document.querySelectorAll('.error');
+		errorInputs.forEach( (el) => {
+			el.classList.remove('error');
+		});
+	}
+
+	// initially focus name input field
+	nameInput.focus();
+
+	// initially hide other job role field
 	hideTitleOtherField();
 
+	// show/hide other job role field based on select option
 	titleSelect.addEventListener('change', (e) => {
 		if(e.target.selectedOptions[0].value == 'other'){
 			showTitleOtherField();
@@ -154,20 +266,28 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
+	// remove color options from select element
 	emptySelectOptions(colorSelect, 'Please select a T-shirt theme');
-
+	// initially hide color select element
+	hideColorSelect();
+	
+	// populate t-shirt theme select options according to selected theme
 	designSelect.addEventListener('change', (e) => {
 		if (e.target.selectedOptions[0].value == ''){
 			emptySelectOptions(colorSelect, 'Please select a T-shirt theme');
+			hideColorSelect();
 		}
 		else if(e.target.selectedOptions[0].value == 'js puns'){
 			populateSelect(colorSelect, filteredSelectOptions('JS Puns shirt only', colorSelectOptions));
+			showColorSelect();
 		}
 		else if (e.target.selectedOptions[0].value == 'heart js') {
 			populateSelect(colorSelect, filteredSelectOptions('I ♥ JS shirt only', colorSelectOptions));
+			showColorSelect();
 		}
 	});
 
+	// check for activity conflicts when selecting an activity
 	activities.forEach( (activity) => {
 		activity.addEventListener('click', (event) => {
 			const checkbox = event.currentTarget;
@@ -184,12 +304,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+	// add a running total below checkboxes
 	addRunningTotal();
 
+	// select credit card option by default
 	paymentSelect.querySelector('option[value="credit card"]').selected = 'selected';
+
+	// hide other payment methods
 	hidePayPalOption()
 	hideBitCoinOption();
 
+	// show/hide fields on change select payment method
 	paymentSelect.addEventListener('change', (e) => {
 		switch (e.target.selectedOptions[0].value) {
 
@@ -215,6 +340,68 @@ window.addEventListener('DOMContentLoaded', () => {
 				showBitCoinOption();
 			break;
 
+		}
+	});
+
+	// create listener for email input to detect validity in real-time
+	const createListener = (validator) => {
+	  return e => {
+	    const text = e.target.value;
+	    const valid = validator(text);
+	    const showError = text !== "" && !valid;
+	    showOrHideError(e.target, showError, 'Please enter a valid email address');
+	  };
+	}
+
+	emailInput.addEventListener("input", createListener(isValidEmail));
+
+	// on form submit, check for errors
+	confForm.addEventListener('submit', function(e) {
+		e.preventDefault();
+		clearErrors();
+
+		let errors = [];
+
+		if(!isValidName(nameInput.value)){
+			const errMsg = 'Please enter a valid name'
+			errors.push(errMsg)
+			showOrHideError(nameInput, true, errMsg);
+		}
+
+		if(!isValidEmail(emailInput.value)){
+			const errMsg = 'Please enter a valid email';
+			errors.push(errMsg)
+			showOrHideError(emailInput, true, errMsg);
+		}
+
+		if(!hasSelectedActivity()){
+			const errMsg = 'Please choose at least one activity';
+			errors.push(errMsg)
+			showOrHideError(activitiesContainer, true, errMsg);
+		}
+
+		if(paymentSelect.options[paymentSelect.selectedIndex].value == 'credit card'){
+			if(!isValidCardNumber(creditCardInput.value)){
+				const errMsg = 'Please enter a valid credit card number between 13 and 16 digits';
+				errors.push(errMsg)
+				showOrHideError(creditCardInput, true, errMsg);
+			}
+
+			if(!isValidZIP(zipInput.value)){
+				const errMsg ='Please enter a valid ZIP code consiting of five digits';
+				errors.push(errMsg)
+				showOrHideError(zipInput, true, errMsg);
+			}
+
+			if(!isValidCVV(cvvInput.value)){
+				const errMsg ='Please enter a valid three digit CVV code';
+				errors.push(errMsg)
+				showOrHideError(cvvInput, true, errMsg);
+			}
+		}
+
+		if(errors.length > 0){
+			showErrors(errors);
 		}
 	});
 });
