@@ -361,7 +361,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	// on form submit, check for errors
 	confForm.addEventListener('submit', function(e) {
-		e.preventDefault();
 		clearErrors();
 
 		let errors = [];
@@ -411,6 +410,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		if(errors.length > 0){
 			showErrors(errors);
+			e.preventDefault();
 		}
 	});
 });
